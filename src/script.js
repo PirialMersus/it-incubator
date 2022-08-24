@@ -2,6 +2,9 @@ import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as dat from "dat.gui";
+import testVertexShader from "./shaders/vertex.glsl";
+import testFragmentShader from "./shaders/fragment.glsl";
+import flag from './../static/textures/ukraine_flag.jpg'
 import matCap1 from "../static/textures/matcaps/1.png";
 import matCap2 from "../static/textures/matcaps/2.png";
 import matCap3 from "../static/textures/matcaps/3.png";
@@ -30,6 +33,9 @@ const scene = new THREE.Scene();
  * Textures
  */
 const textureLoader = new THREE.TextureLoader();
+
+const flagTexture = textureLoader.load(flag);
+
 const matcapTexture = textureLoader.load(matCap3);
 const matcapTexturesArr = [
   textureLoader.load(matCap1),
@@ -46,14 +52,14 @@ const matcapTexturesArr = [
 const fontLoader = new THREE.FontLoader();
 const font = fontLoader.parse(matCap9);
 
-const textGeometry = new THREE.TextBufferGeometry("iT - incubator", {
+const textGeometry = new THREE.TextBufferGeometry("Happy independence day of Ukraine", {
   font,
-  size: 0.5,
-  height: 0.2,
-  curveSegments: 5,
+  size: 0.05,
+  height: 0.02,
+  curveSegments: 2,
   bevelEnabled: true,
-  bevelThickness: 0.03,
-  bevelSize: 0.02,
+  bevelThickness: 0.001,
+  bevelSize: 0.002,
   bevelOffset: 0,
   bevelSegments: 4,
 });
@@ -92,6 +98,43 @@ for (let i = 0; i < 10000; i++) {
 
   scene.add(donut);
 }
+
+
+const geometry = new THREE.PlaneBufferGeometry(1, 1, 32, 32);
+
+const count = geometry.attributes.position.count;
+const randoms = new Float32Array(count);
+
+for (let i = 0; i < count; i++) {
+  randoms[i] = Math.random();
+}
+geometry.setAttribute("aRandom", new THREE.BufferAttribute(randoms, 1));
+
+const flagMaterial = new THREE.ShaderMaterial({
+  vertexShader: testVertexShader,
+  fragmentShader: testFragmentShader,
+  // wireframe: true,
+  side: THREE.DoubleSide,
+  // transparent: true,
+  uniforms: {
+    uFrequency: {value: new THREE.Vector3(10, 5)},
+    uTime: {value: 0},
+    uColor: {value: new THREE.Color('orange')},
+    uTexture: {value: flagTexture}
+  },
+});
+
+// Mesh
+const mesh = new THREE.Mesh(geometry, flagMaterial);
+mesh.scale.y = 2 / 3;
+mesh.position.z = -0.4
+// mesh.scale.x = 9
+// mesh.scale.y = 9
+// mesh.scale.z = 9
+scene.add(mesh);
+
+
+
 /**
  * Sizes
  */
@@ -124,9 +167,9 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.x = 1;
-camera.position.y = 1;
-camera.position.z = 2;
+camera.position.x = 0.7;
+camera.position.y = 0.2;
+camera.position.z = 0.5;
 scene.add(camera);
 
 // Controls
@@ -149,7 +192,8 @@ const clock = new THREE.Clock();
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
-
+  // material.uniforms.uTime.value = clock.getElapsedTime();
+  flagMaterial.uniforms.uTime.value = clock.getElapsedTime();
   // Update controls
   controls.update();
 
